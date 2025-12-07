@@ -1,19 +1,30 @@
+// Load environment variables from .env (for local development)
+require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 
 const app = express();
-const PORT = 5000;
+
+// Use Render's PORT or fallback to 5000
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000', // adjust if your React runs on a different port
+  origin: 'http://localhost:3000', // adjust if your frontend runs on a different port
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
 app.use(express.json());
 
-// MongoDB Connection (fixed for Mongoose 7+)
-mongoose.connect('mongodb://127.0.0.1:27017/todoApp')
+// MongoDB connection
+const mongoUri = process.env.MONGO_URI;
+if (!mongoUri) {
+  console.error("Error: MONGO_URI is not defined. Add it in .env or Render Environment Variables.");
+  process.exit(1);
+}
+
+mongoose.connect(mongoUri)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
@@ -25,6 +36,9 @@ const todoSchema = new mongoose.Schema({
 const Todo = mongoose.model('Todo', todoSchema);
 
 // Routes
+
+// Root route
+app.get('/', (req, res) => res.send('<h1>Todo API Running</h1>'));
 
 // Get all todos
 app.get('/todos', async (req, res) => {
@@ -38,6 +52,7 @@ app.get('/todos', async (req, res) => {
 
 // Create a new todo
 app.post('/todos', async (req, res) => {
+  if (!req.body.text) return res.status(400).json({ message: 'Text is required' });
   try {
     const newTodo = new Todo({ text: req.body.text });
     await newTodo.save();
@@ -49,6 +64,7 @@ app.post('/todos', async (req, res) => {
 
 // Update a todo
 app.put('/todos/:id', async (req, res) => {
+  if (!req.body.text) return res.status(400).json({ message: 'Text is required' });
   try {
     const todo = await Todo.findById(req.params.id);
     if (!todo) return res.status(404).json({ message: 'Todo not found' });
@@ -74,5 +90,5 @@ app.delete('/todos/:id', async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 

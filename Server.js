@@ -11,11 +11,12 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB connection
-const mongoUri = process.env.MONGO_URI;
-if (!mongoUri) {
-  console.error("Error: MONGO_URI is not defined. Add it in Render Environment Variables.");
-  process.exit(1);
-}
+const mongoUri = "mongodb+srv://prajithsaraniki_db_user:wWtIaxz1y81i8vIi@cluster0.aavqbjt.mongodb.net/todo?retryWrites=true&w=majority";
+
+mongoose.connect(mongoUri)
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.error("MongoDB connection error:", err));
+
 
 mongoose.connect(mongoUri)
   .then(() => console.log('MongoDB connected'))
